@@ -1,6 +1,4 @@
-# 1.两数之和
-
-[题目链接](https://leetcode-cn.com/problems/two-sum/)
+# 1.[两数之和](https://leetcode-cn.com/problems/two-sum/)
 
 **题解：**
 
@@ -35,9 +33,7 @@ var twoSum = function(nums, target) {
 };
 ```
 
-# 2.两数相加
-
-[题目链接](https://leetcode-cn.com/problems/add-two-numbers/)
+# 2.[两数相加](https://leetcode-cn.com/problems/add-two-numbers/)
 
 **题解：**
 
@@ -81,5 +77,73 @@ var addTwoNumbers = function(l1, l2) {
   }
   return res.next;
 };
+```
+
+# 3.[无重复字符的最长子串](https://leetcode-cn.com/problems/longest-substring-without-repeating-characters/)
+
+**题解：**
+
+遍历字符串中的每个字符，从某个字符开始继续向后遍历，直到出现重复字符，记录长度，与最长进行对比。将最大值保存并返回。
+
+```js
+var lengthOfLongestSubstring = function(s) {
+    let max =0;
+    for(let i=0;i<s.length;i++){
+        let cur =1;
+        let arr =[];
+        arr.push(s[i]);
+        for(let j=i+1;j<s.length;j++){
+            if(arr.indexOf(s[j])===-1){
+                arr.push(s[j]);
+                cur++;
+            }else{
+                
+                break;
+            }
+        }
+        if(max<cur){
+            max=cur;
+        }
+    }
+    return max;
+};
+```
+
+**优化：**
+
+滑动窗口
+
+我们制作一个窗口，让窗口中的字符串满足题目要求（无重复）
+怎么让他满足要求呢？ 那就要滑动窗口了，循环去掉左边第一个元素，直到窗口中元素无重复，此时再扩大窗口
+
+滑动窗口有两个关键点：扩张 + 收缩
+首先（右指针）扩张到滑动窗口不满足条件的时候暂停，
+（左指针）开始收缩窗口，让窗口满足条件后再进行扩张（右指针）
+
+```js
+function lengthOfLongestSubstring(s) {
+  let len = s.length;
+  let result = 0;
+
+  let set = new Set();
+  // 左指针用来收缩窗口
+  let left = 0;
+  // 右指针用来扩张窗口
+  let right = 0;
+
+  while (left < len) {
+    // 如果不重复，就不断扩张窗口，元素添加到set中
+    while (right < len && !set.has(s[right])) {
+      set.add(s[right]);
+      right++;
+    }
+    // 到这里说明有元素重复了，先记录子串长度，然后收缩窗口
+    result = Math.max(result, right - left);
+    // 收缩窗口
+    set.delete(s[left]);
+    left++;
+  }
+  return result;
+}
 ```
 
