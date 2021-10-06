@@ -147,3 +147,62 @@ function lengthOfLongestSubstring(s) {
 }
 ```
 
+# 4.[寻找两个正序数组的中位数](https://leetcode-cn.com/problems/median-of-two-sorted-arrays/)
+
+**题解：**
+
+合并两个数组并升序排序，取中位数。
+
+```js
+var findMedianSortedArrays = function(nums1, nums2) {
+    let arr = nums1.concat(nums2);
+    arr.sort(function(a,b){return a-b});
+    if(arr.length%2==0){
+        return (arr[arr.length/2]+arr[arr.length/2-1])/2;
+    }else{
+        return arr[(arr.length-1)/2];
+    }
+};
+```
+
+**优化：**
+
+二分查找
+
+```js
+var findMedianSortedArrays = function(nums1, nums2) {
+   let len1 = nums1.length;
+   let len2 = nums2.length;
+   // 对长度短的数组进行二分查找    
+   if (len1 > len2) {
+       return findMedianSortedArrays(nums2, nums1);
+   }
+   let len = len1 + len2;
+   let start = 0;
+   let end = len1;
+   // 两个数组左分段的长度    
+   let partLen1 = 0;
+   let partLen2 = 0;
+
+   while (start <= end) {
+       partLen1 = (start + end) >> 1;
+       partLen2 = ((len + 1) >> 1) - partLen1;
+
+       let l1 = partLen1 === 0? -Infinity : nums1[partLen1 - 1];
+       let l2 = partLen2 === 0? -Infinity : nums2[partLen2 - 1];
+       let r1 = partLen1 === len1 ? Infinity : nums1[partLen1];
+       let r2 = partLen2 === len2 ? Infinity : nums2[partLen2];
+
+       if (l1 > r2) {
+            end = partLen1 - 1;
+       } else if (l2 > r1) {
+            start = partLen1 + 1;
+       } else { // 满足条件的情况： l1 <= r2 && l2 <= r1
+            return len % 2 === 0 ?
+            (Math.max(l1, l2) + Math.min(r1, r2) ) / 2 : 
+            Math.max(l1, l2)
+       }
+   }
+};
+```
+
