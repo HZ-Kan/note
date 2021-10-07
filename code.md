@@ -206,3 +206,43 @@ var findMedianSortedArrays = function(nums1, nums2) {
 };
 ```
 
+# 7.[整数反转](https://leetcode-cn.com/problems/reverse-integer/)
+
+**题解：**
+
+将数字转换成字符串，然后利用split分割成数组，利用数组翻转，再转换成数字。
+
+```js
+var reverse = function(x) {
+    let f=1;
+    if(x<0){
+        f=-1;
+        x= x * -1;
+    }
+    let arr =x.toString().split('');
+    arr.reverse();
+    x=arr.join('');
+    x=x*f;
+    if(x<-1*Math.pow(2,31)||x>Math.pow(2,31)-1) return 0;
+    return x;
+};
+```
+
+**优化：**
+
+将数字每次除以10,获得每位上的数，再重组。
+
+```js
+var reverse = function(x) {
+    let n = 0
+    let a = x < 0 ? 0 - x : x
+    while (a)
+	{
+		n = n * 10 + a % 10;
+		a = Math.floor(a/10);
+	}
+    n = x < 0 ? 0 - n : n
+	return n > 2147483647 || n < -2147483648 ? 0 : n;
+};
+```
+
