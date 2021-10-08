@@ -206,6 +206,58 @@ var findMedianSortedArrays = function(nums1, nums2) {
 };
 ```
 
+# 5.[最长回文子串](https://leetcode-cn.com/problems/longest-palindromic-substring/)
+
+**题解：**动态规划
+
+```js
+var longestPalindrome = function(s) {
+    let len = s.length;
+    if (len < 2) {
+        return s
+    }
+    
+    let maxLen = 1; // 最长的回文字符串长度
+    let res = s[0]; // 最终要返回的值
+
+    // 初始化二维数组 dp[][]
+    // 注意: 为了更符合直觉, 长度下标从1开始, 而非从0开始
+    let dp = new Array(len + 1);
+    for(let i = 0; i < len + 1; i++) {
+        dp[i] = new Array(len);
+    }
+
+    // 设置初始值:当L为1或者2的情况
+    for(let i = 0; i < len; i++) {
+        dp[1][i] = true;
+        dp[2][i] = s[i] === s[i + 1];   // 当i === len - 1 时,
+        if (dp[2][i] && 2 > maxLen) {
+            maxLen = 2;
+            res = s.substring(i, i + 2);
+        }
+    }
+
+    // 开始递推
+    for (let L = 3; L < len + 1; L++) {
+        for(let i = 0; i < len; i++) {
+            let r = i + L - 1;  // r为右边界
+            if (r >= len) {
+                break;
+            }
+            dp[L][i] = dp[L - 2][i + 1] && (s[i] === s[r]);
+            if (dp[L][i] && L > maxLen) {
+                maxLen = L;
+                res = s.substring(i, r + 1);
+            }
+        }
+    }
+    
+    return res
+};
+```
+
+
+
 # 7.[整数反转](https://leetcode-cn.com/problems/reverse-integer/)
 
 **题解：**
