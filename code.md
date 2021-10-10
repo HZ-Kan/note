@@ -256,7 +256,41 @@ var longestPalindrome = function(s) {
 };
 ```
 
+# 6.[Z 字形变换](https://leetcode-cn.com/problems/zigzag-conversion/)
 
+**题解：**
+
+寻找每一行的规律，直接取得字符串对应位置的字符即可。但是要考虑到不适用于numRows等于1的情况。
+
+```js
+var convert = function(s, numRows) {
+    let str='';
+    if(numRows===1){//下面只适用于numRows不等于1的情况
+        return s;
+    }
+    for(let i =0;i<numRows;i++){
+        let j= i;
+        if(i===0||i===numRows-1){
+            while(j<s.length){
+                str+=s[j];
+                j=j+2*numRows-2;
+            }
+        }else{
+            let flag=0;
+            while(j<s.length){
+                str+=s[j];
+                flag++;
+                if(flag%2!==0){
+                    j=j+(numRows-i)*2-2;
+                }else{
+                    j=j+(i+1)*2-2;
+                }
+            }
+        }
+    }
+    return str;
+};
+```
 
 # 7.[整数反转](https://leetcode-cn.com/problems/reverse-integer/)
 
