@@ -332,3 +332,16 @@ var reverse = function(x) {
 };
 ```
 
+# 8.[ 字符串转换整数 (atoi)](https://leetcode-cn.com/problems/string-to-integer-atoi/)
+
+**题解：**
+
+正则表达式
+
+```
+var myAtoi = function(s) {
+    let res = s.trim().match(/^(\-|\+)?\d+/g)
+    return res ? Math.max(Math.min(Number(res[0]),2**31-1),-(2**31)) : 0
+};
+```
+
