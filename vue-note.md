@@ -1,16 +1,18 @@
 # Vue组件通信
 
-https://segmentfault.com/a/1190000019208626
+**[参考](https://segmentfault.com/a/1190000019208626)**
 
-## 1.利用props/$emit
+## 1.props/$emit
 
 #### 简介：
 
 这种方式是父组件通过props的方式向子组件传递参数，子组件通过事件触发$emit向父组件传递参数。
 
+当然这里只是简单的介绍他们的常见的用法，更多用法请移步[**官方文档**](https://cn.vuejs.org/v2/guide/components.html#%E7%9B%91%E5%90%AC%E5%AD%90%E7%BB%84%E4%BB%B6%E4%BA%8B%E4%BB%B6)。
+
 #### 示例：
 
-父组件=>子组件
+**父组件=>子组件**
 
 我们会将AtransB传递到子组件中，并在子组件中利用props接收并展示。
 
@@ -83,6 +85,8 @@ https://segmentfault.com/a/1190000019208626
 
 **子组件=>父组件**
 
+利用子组件的点击事件来触发[$emit](https://cn.vuejs.org/v2/api/#vm-emit)然后在父组件中利用事件接收并赋值给对应的属性。
+
 - 编辑父组件内容
 
   ```vue
@@ -150,4 +154,6 @@ https://segmentfault.com/a/1190000019208626
 - 点击子组件运行截图
 
   ![kfm7n-l92cd](D:/Typora/img/kfm7n-l92cd.gif)
+
+## 2.$emit/$on
 
