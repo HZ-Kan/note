@@ -1,6 +1,6 @@
 # Vue组件通信
 
-**[参考](https://segmentfault.com/a/1190000019208626)**
+**[参考](https://segmentfault.com/a/1190000019208626)**   **[参考](https://www.cnblogs.com/barryzhang/p/10566515.html)**
 
 ## 1.props/$emit
 
@@ -249,26 +249,311 @@
 
 这里介绍另外一种跨级通信的方式。
 
-- `$attrs`：包含了父作用域中不被 prop 所识别 (且获取) 的特性绑定 (class 和 style 除外)。当一个组件没有声明任何 prop 时，这里会包含所有父作用域的绑定 (class 和 style 除外)，并且可以通过 v-bind="$attrs" 传入内部组件。通常配合 interitAttrs 选项一起使用。
+- `$attrs`：包含了父作用域中不被 prop 所识别 (且获取) 的特性绑定 (class 和 style 除外)。当一个组件没有声明任何 prop 时，这里会包含所有父作用域的绑定 (class 和 style 除外)，并且可以通过 v-bind="$attrs" 传入内部组件。通常配合[ interitAttrs](https://blog.csdn.net/qq_38211541/article/details/105824684) 选项一起使用。
 - `$listeners`：包含了父作用域中的 (不含 .native 修饰器的) v-on 事件监听器。它可以通过 v-on="$listeners" 传入内部组件
 
 简单来说：`$attrs`与`$listeners` 是两个对象，`$attrs` 里存放的是父组件中绑定的非 Props 属性，`$listeners`里存放的是父组件中绑定的非原生事件。
 
-**Vue3已废弃[$listeners](https://v3.vuejs.org/guide/migration/listeners-removed.html#overview)**。
+**Vue3已废弃[$listeners](https://v3.vuejs.org/guide/migration/listeners-removed.html#overview)**。下面使用$attrs进行演示。
 
 **示例：**
 
-- 创建祖先组件，添加代码
+- 创建祖先组件A，添加代码
 
+  ```vue
+  <template>
+      <div class="comA">
+          我是父组件{{ text }}
+          <componentB :='text' :age='age' :gender='gender' />
+      </div>
+  </template>
+  
+  <script>
+  import componentB from './componentB';
+  export default {
+      name: 'comA',
+      components:{
+          componentB
+      },
+      data(){
+          return{
+              text: 'A组件中的数据',
+              age: 18,
+              gender: 'man'
+          }
+      }
+  }
+  </script>
+  
+  <style scoped>
+  .comA{
+      border: 1px solid black;
+  }
+  </style>
   ```
   
+- 创建子组件B，添加代码
+
+  ```vue
+  <template>
+    <div class="comB">
+      {{text}} 我是子组件B {{ $attrs }}
+      <componentC v-bind="$attrs" /> 
+    </div>
+  </template>
+  
+  <script>
+  import componentC from './componentC.vue'
+  export default {
+    name: 'comB',
+    inheritAttrs: false, // 可以关闭自动挂载到组件根元素上的没有在props声明的属性
+    components: {
+      componentC
+    },
+    props: {
+      text: String
+    }
+  }
+  </script>
   ```
 
+- 创建子组件C，添加代码
+
+  ```vue
+  <template>
+      <div class="comC">
+          我是子组件C {{ $attrs }}
+      </div>
+  </template>
   
+  <script>
+  export default{
+      name: 'comC',
+  
+  }
+  </script>
+  ```
+
+**运行截图：**
+
+![image-20211121191113419](D:/Typora/img/image-20211121191113419.png)
+
+## 4.Provide/Inject
+
+​		以允许一个祖先组件向其所有子孙后代注入一个依赖，不论组件层次有多深，并在起上下游关系成立的时间里始终生效。一言而蔽之：祖先组件中通过provider来提供变量，然后在子孙组件中通过inject来注入变量。			provide / inject API 主要解决了跨级组件间的通信问题，不过它的使用场景，主要是子组件获取上级组件的状态，跨级组件间建立了一种主动提供与依赖注入的关系。
+
+**示例：**
+
+- 创建父组件A，添加代码
+
+  ```vue
+  <template>
+      <div class="comA">
+          我是父组件A
+          <componentB />
+      </div>
+  </template>
+  
+  <script>
+  import componentB from './componentB';
+  export default {
+      name: 'comA',
+      components:{
+          componentB
+      },
+      provide: {
+          text: 'A组件中的数据'
+      },
+  }
+  </script>
+  
+  <style scoped>
+  .comA{
+      border: 1px solid black;
+  }
+  </style>
+  ```
+
+- 创建子组件B，添加代码
+
+  ```vue
+  <template>
+    <div class="comB">
+      我是子组件B 
+      <componentC /> 
+    </div>
+  </template>
+  
+  <script>
+  import componentC from './componentC.vue'
+  export default {
+    name: 'comB',
+    components: {
+      componentC
+    }
+  }
+  </script>
+  ```
+
+- 创建子组件C，添加代码
+
+  ```vue
+  <template>
+      <div class="comC">
+          我是子组件C {{ text }}
+      </div>
+  </template>
+  
+  <script>
+  export default{
+      name: 'comC',
+      inject: ['text'],
+  }
+  </script>
+  ```
+
+**运行截图：**
+
+![image-20211121192410395](D:/Typora/img/image-20211121192410395.png)
+
+**需要注意的是**provide 和 inject 绑定并不是可响应的。这是刻意为之的。然而，如果你传入了一个可监听的对象，那么其对象的属性还是可响应的。简而言之当组件A中的text发生变化时，组件C中的text不变。想要实现响应式，可参考[官方文档](https://v3.cn.vuejs.org/guide/component-provide-inject.html#%E5%A4%84%E7%90%86%E5%93%8D%E5%BA%94%E6%80%A7)。
+
+## 5.$parent / $children与 ref
+
+**[$children](https://v3.cn.vuejs.org/guide/migration/children.html#children)在Vue3中已经被移除**（官网这样写到：在 3.x 中，`$children` property 已被移除，且不再支持。如果你需要访问子组件实例，我们建议使用 [$refs](https://v3.cn.vuejs.org/guide/component-template-refs.html#模板引用)。）
+
+- `ref`：如果在普通的 DOM 元素上使用，引用指向的就是 DOM 元素；如果用在子组件上，引用就指向组件实例
+- `$parent` / `$children`：访问父 / 子实例
+
+需要注意的是：这两种都是直接得到组件实例，使用后可以直接调用组件的方法或访问数据。我们来看个用 `ref`来访问组件的例子：
+
+- 创建父组件A，添加代码
+
+  ```vue
+  <template>
+      <div class="comA">
+          我是父组件A {{text}}
+          <componentB ref="comB" />
+      </div>
+  </template>
+  
+  <script>
+  import componentB from './componentB';
+  export default {
+      name: 'comA',
+      components:{
+          componentB
+      },
+      data(){
+          return{
+              text: '',
+              aaa: '组件A中的数据'
+          }
+      },
+      mounted(){
+          const comB = this.$refs.comB;
+          this.text = comB.text;
+          comB.aaa = this.aaa;
+          comB.sayHello(); 
+      }
+  }
+  </script>
+  
+  <style scoped>
+  .comA{
+      border: 1px solid black;
+  }
+  </style>
+  ```
+
+- 创建子组件B，添加代码
+
+  ```vue
+  <template>
+    <div class="comB">
+      我是子组件B {{aaa}}
+    </div>
+  </template>
+  
+  <script>
+  export default {
+    name: 'comB',
+    data(){
+      return{
+        text: '组件B中的数据',
+        aaa: ''
+      }
+    },
+    methods:{
+      sayHello(){
+        window.alert('Hello');
+      }
+    }
+  }
+  </script>
+  ```
+
+**运行截图：**
+
+![image-20211121195237065](D:/Typora/img/image-20211121195237065.png)
+
+不过，**这两种方法的弊端是，无法在跨级或兄弟间通信**。
 
 ## 6.vux
 
+![image](https://segmentfault.com/img/remote/1460000019208632)
+
+**1.简要介绍Vuex原理**
+
+Vuex实现了一个单向数据流，在全局拥有一个State存放数据，当组件要更改State中的数据时，必须通过Mutation进行，Mutation同时提供了订阅者模式供外部插件调用获取State数据的更新。而当所有异步操作(常见于调用后端接口异步获取更新数据)或批量的同步操作需要走Action，但Action也是无法直接修改State的，还是需要通过Mutation来修改State的数据。最后，根据State的变化，渲染到视图上。
+
+**2.简要介绍各模块在流程中的功能：**
+
+- Vue Components：Vue组件。HTML页面上，负责接收用户操作等交互行为，执行dispatch方法触发对应action进行回应。
+- dispatch：操作行为触发方法，是唯一能执行action的方法。
+- actions：**操作行为处理模块,由组件中的`$store.dispatch('action 名称', data1)`来触发。然后由commit()来触发mutation的调用 , 间接更新 state**。负责处理Vue Components接收到的所有交互行为。包含同步/异步操作，支持多个同名方法，按照注册的顺序依次触发。向后台API请求的操作就在这个模块中进行，包括触发其他action以及提交mutation的操作。该模块提供了Promise的封装，以支持action的链式触发。
+- commit：状态改变提交操作方法。对mutation进行提交，是唯一能执行mutation的方法。
+- mutations：**状态改变操作方法，由actions中的`commit('mutation 名称')`来触发**。是Vuex修改state的唯一推荐方法。该方法只能进行同步操作，且方法名只能全局唯一。操作之中会有一些hook暴露出来，以进行state的监控等。
+- state：页面状态管理容器对象。集中存储Vue components中data对象的零散数据，全局唯一，以进行统一的状态管理。页面显示所需的数据从该对象中进行读取，利用Vue的细粒度数据响应机制来进行高效的状态更新。
+- getters：state对象读取方法。图中没有单独列出该模块，应该被包含在了render中，Vue Components通过该方法读取全局state对象。
+
+**3.Vuex与localStorage**
+
+vuex 是 vue 的状态管理器，存储的数据是响应式的。但是并不会保存起来，刷新之后就回到了初始状态，**具体做法应该在vuex里数据改变的时候把数据拷贝一份保存到localStorage里面，刷新之后，如果localStorage里有保存的数据，取出来再替换store里的state。**
+
 ## 总结
 
-当项目比较大时，可以选择vuex
+常见使用场景可以分为三类：
+
+- 父子通信：
+
+  props/$emit;（推荐）
+
+  ref ；
+
+  provide / inject API；
+
+  $attrs;
+
+  $emit/$on；
+
+  Vuex;
+
+  v-model
+
+- 兄弟通信：
+
+  Vuex;
+
+  $emit/$on；
+
+- 跨级通信：
+
+  Vuex；（大型项目推荐）
+
+  provide / inject API;
+
+  $attrs;
+
+  $emit/$on；
 
