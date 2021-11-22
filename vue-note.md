@@ -521,6 +521,10 @@ Vuex实现了一个单向数据流，在全局拥有一个State存放数据，�
 
 vuex 是 vue 的状态管理器，存储的数据是响应式的。但是并不会保存起来，刷新之后就回到了初始状态，**具体做法应该在vuex里数据改变的时候把数据拷贝一份保存到localStorage里面，刷新之后，如果localStorage里有保存的数据，取出来再替换store里的state。**
 
+## 7.[v-model](https://blog.csdn.net/kzj0916/article/details/120477925)
+
+点击链接查看
+
 ## 总结
 
 常见使用场景可以分为三类：
