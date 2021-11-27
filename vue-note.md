@@ -561,3 +561,181 @@ vuex 是 vue 的状态管理器，存储的数据是响应式的。但是并不�
 
   $emit/$on；
 
+# Vue插槽
+
+​		**插槽(slot)**可以让我们在自定义组件的时候把一部分内容预留出来，留给使用该组件的人去自定义，同时我们还可以传递一些数据供其使用。插槽分为三类匿名插槽，具名插槽，作用域插槽。
+
+## 1.匿名插槽（默认插槽）
+
+​	name可以不写，默认值为"default"，这种插槽称为**匿名插槽**或者**默认插槽**。
+
+**示例**
+
+- 创建组件A，添加代码
+
+  ```vue
+  <template>
+   <div class="comA">
+      <comB>
+          <p>一段文字</p>
+      </comB>
+  </div>
+  </template>
+  
+  <script>
+  import comB from './componentB.vue'
+  export default {
+      name: 'comA',
+      components: {
+          comB,
+      }
+  }
+  </script>
+  ```
+
+- 创建组件B，添加代码
+
+  ```vue
+  <template>
+      <div class="comB">
+          <p>123</p>
+          <slot></slot>
+      </div>
+  </template>
+  
+  <script>
+  export default {
+      name: 'comB',
+  }
+  </script>
+  ```
+
+- 运行结果
+
+  ![image-20211127164206424](D:/Typora/img/image-20211127164206424.png)
+
+## 2.具名插槽
+
+​		顾名思义就是给这个插槽起个名字,插槽在使用 `name` 属性绑定名字后, 在组件被调用的时候,组件内的标
+
+签通过 `slot` 属性来决定某个标签具体渲染哪一个插槽。
+
+利用[**v-slot**](https://cn.vuejs.org/v2/guide/components-slots.html)实现
+
+**示例**
+
+- 创建组件A，添加代码
+
+  ```vue
+  <template>
+      <div class="comA">
+          <comB>
+              <template v-slot:body> 
+                  <p>body</p>
+              </template> 
+              <template v-slot:header> 
+                  <p>header</p>
+              </template> 
+              <template v-slot:footer> 
+                  <p>footer</p>
+              </template>   
+          </comB>
+      </div>
+  </template>
+  
+  <script>
+  import comB from './componentB.vue'
+  export default {
+      name: 'comA',
+      components: {
+          comB,
+      }
+  }
+  </script>
+  ```
+
+- 创建组件B，添加代码
+
+  ```vue
+  <template>
+      <div class="comB">
+          <p>123</p>
+          <slot name="header">备用内容</slot>
+          <slot name="body"></slot>
+          <slot name="footer"></slot>
+      </div>
+  </template>
+  
+  <script>
+  export default {
+      name: 'comB',
+  }
+  </script>
+  ```
+
+- 运行结果
+
+  ![image-20211127165415057](D:/Typora/img/image-20211127165415057.png)
+
+## 3.作用域插槽
+
+​		简单来说就是一种可以访问子组件中数据的插槽。
+
+通过v-slot+v-bind实现。**#是v-slot的语法糖。**
+
+**示例**
+
+- 创建组件A，添加代码
+
+  ```vue
+  <template>
+      <div class="comA">
+          <comB>
+              <template #body='{text}'> 
+                  <p>{{text.a}}</p>
+              </template>  
+          </comB>
+      </div>
+  </template>
+  
+  <script>
+  import comB from './componentB.vue'
+  export default {
+      name: 'comA',
+      components: {
+          comB,
+      }
+  }
+  </script>
+  ```
+
+- 创建组件B，添加代码
+
+  ```vue
+  <template>
+      <div class="comB">
+          <p>123</p>
+          <slot name='body' :text='text'>123</slot>
+      </div>
+  </template>
+  
+  <script>
+  export default {
+      name: 'comB',
+      data(){
+          return{
+              text:{
+                  a: '组件B中a的值'
+              }
+          }
+      }
+  }
+  </script>
+  ```
+
+- 运行截图
+
+  ![image-20211127173352980](D:/Typora/img/image-20211127173352980.png)
+
+[参考](http://caibaojian.com/vue-slot.html)
+
