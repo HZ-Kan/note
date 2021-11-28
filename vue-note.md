@@ -739,3 +739,100 @@ vuex 是 vue 的状态管理器，存储的数据是响应式的。但是并不�
 
 [参考](http://caibaojian.com/vue-slot.html)
 
+# Vue动态组件
+
+​		有的时候，需要在不同组件之间进行动态的切换。比如tab栏的切换，可以利用Vue的**[is](https://cn.vuejs.org/v2/api/#is)**属性来实现。
+
+**示例**
+
+- 效果展示
+
+  ![yaryi-t16ib](D:/Typora/img/yaryi-t16ib.gif)
+
+- 创建组件A，添加代码
+
+  ```vue
+  <template>
+   <div class="comA">
+       <h1>is 动态组件</h1>
+       <br />
+       <button @click='changeCom'>切换组件</button>
+       <div :is='com'></div>
+  </div>
+  </template>
+  
+  <script>
+  import comB from './comB.vue'
+  import comC from './comC.vue'
+  import comD from './comD.vue'
+  export default {
+      name: 'comA',
+      data(){
+          return{
+              index: 0,
+              arr:['comB','comC','comD'],
+              com: 'comB'
+          }
+      },
+      components: {
+          comB,
+          comC,
+          comD
+      },
+      methods:{
+          changeCom(){
+              this.index = this.index === 2 ? 0 : this.index + 1;
+              this.com = this.arr[this.index];
+          }
+      }
+  }
+  </script>
+  ```
+
+- 创建组件B，添加代码
+
+  ```vue
+  <template>
+      <div class="comB">
+          组件B
+      </div>
+  </template>
+  
+  <script>
+  export default {
+      name: 'comB',
+  }
+  </script>
+  ```
+
+- 创建组件C，添加代码
+
+  ```vue
+  <template>
+    <div class="comC">
+      组件C
+    </div>
+  </template>
+  
+  <script>
+  export default {
+    name: 'comC',
+  }
+  </script>
+  ```
+
+- 创建组件D，添加代码
+
+  ```vue
+  <template>
+    <div class="comD">
+      组件D
+    </div>
+  </template>
+  
+  <script>
+  export default {
+    name: 'comD',
+  }
+  </script>
+  ```
