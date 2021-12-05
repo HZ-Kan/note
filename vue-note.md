@@ -852,3 +852,39 @@ vuex 是 vue 的状态管理器，存储的数据是响应式的。但是并不�
 [官方文档](https://cn.vuejs.org/v2/guide/mixins.html) 
 
 [参考2](https://segmentfault.com/a/1190000015698391)
+
+# Vue组件生命周期钩子函数渲染顺序
+
+[参考](https://www.cnblogs.com/thinheader/p/9462125.html)
+
+- 加载渲染过程
+
+```
+　　父beforeCreate->父created->父beforeMount->子beforeCreate->子created->子beforeMount->子mounted->父mounted
+```
+
+- 子组件更新过程
+
+```
+　　父beforeUpdate->子beforeUpdate->子updated->父updated
+```
+
+- 父组件更新过程
+
+```
+　　父beforeUpdate->父updated
+```
+
+- 销毁过程
+
+```
+　　父beforeDestroy->子beforeDestroy->子destroyed->父destroyed
+```
+
+**钩子函数使用场景**
+
+- 在created钩子中可以对data数据进行操作，这个时候可以进行ajax请求将返回的数据赋给data。
+- 虽然updated函数会在数据变化时被触发，但却不能准确的判断是那个属性值被改变，所以在实际情况中用computed或match函数来监听属性的变化，并做一些其他的操作。
+- 在mounted钩子对挂载的dom进行操作，此时，DOM已经被渲染到页面上。
+- 在使用vue-router时有时需要使用<keep-alive></keep-alive>来缓存组件状态，这个时候created钩子就不会被重复调用了，如果我们的子组件需要在每次加载或切换状态的时候进行某些操作，可以使用activated钩子触发。
+- 所有的生命周期钩子自动绑定 `this` 上下文到实例中，所以不能使用箭头函数来定义一个生命周期方法 (例如 `created: () => this.fetchTodos()`)。这是导致this指向父级。
