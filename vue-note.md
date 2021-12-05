@@ -844,3 +844,11 @@ vuex 是 vue 的状态管理器，存储的数据是响应式的。但是并不�
 # Vue双向绑定
 
 [参考](https://www.jianshu.com/p/e7ebb1500613)
+
+# Vue混入（mixin）
+
+[参考](https://segmentfault.com/a/1190000015698391) 
+
+[官方文档](https://cn.vuejs.org/v2/guide/mixins.html) 
+
+[参考2](https://segmentfault.com/a/1190000015698391)
