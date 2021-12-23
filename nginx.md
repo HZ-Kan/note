@@ -29,4 +29,5 @@ Unlike a [forward proxy](https://link.zhihu.com/?target=https%3A//en.wikipedia.o
 ​	正向代理即是客户端代理, 代理客户端, 服务端不知道实际发起请求的客户端.
 ​	反向代理即是服务端代理, 代理服务端, 客户端不知道实际提供服务的服务端
 
+# Nginx
 
