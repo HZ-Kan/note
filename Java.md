@@ -64,5 +64,19 @@ JDK：Java Development Kit，Java 开发工具包，提供了 Java 的开发及�
 
 # SpringBoot
 
+## 容器功能
+
+### 组件添加
+
+1、@Configuration
+
+2、@Bean、@Component、@Controller、@Service、@Repository
+
+3、@ComponentScan、@Import
+
+4、@Conditional
+
+
+
 # Maven
 
