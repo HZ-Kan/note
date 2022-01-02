@@ -11,3 +11,8 @@
 在项目设置里
 
 ![image-20211230231146867](D:/Typora/img/image-20211230231146867.png)
+
+# 4.Issues使用方法
+
+https://www.cnblogs.com/coding365/p/12872181.html
+
