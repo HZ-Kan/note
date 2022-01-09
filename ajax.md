@@ -98,6 +98,12 @@ xhr.onprogress = function() {
 };
 ```
 
+**取消请求：**abort()
+
+```js
+xhr.abort();
+```
+
 **其他方法：**
 
 ![image-20220106232212371](D:/Typora/img/image-20220106232212371.png)
