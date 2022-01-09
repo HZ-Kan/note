@@ -16,6 +16,8 @@ create  2021-01-06
 
 [SuperAgent使用文档](https://www.jianshu.com/p/1432e0f29abd)
 
+[你真的会使用XMLHttpRequest吗？](https://segmentfault.com/a/1190000004322487)
+
 # Ajax
 
 ![image-20220106224004493](D:/Typora/img/image-20220106224004493.png)
