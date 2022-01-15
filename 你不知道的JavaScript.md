@@ -1,3 +1,9 @@
+---
+author: [美］Kyle Simpson
+title: 《你不知道的JavaScript》学习笔记
+date: 2022-01-11
+---
+
 # 第一部分  作用域和闭包
 
 ## 第1章、作用域是什么？
@@ -339,3 +345,123 @@ function foo() {
 ​	**尽量避免重复声明！！！**
 
 ## 第5章、作用域闭包
+
+## 闭包
+
+### 定义
+
+​	【本书】：当函数可以记住并访问所在的词法作用域时，就产生了闭包，即使函数是在当前词法作用域之外执行。
+
+​	【[MDN](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Closures)】：一个函数和对其周围状态（**lexical environment，词法环境**）的引用捆绑在一起（或者说函数被引用包围），这样的组合就是**闭包**（**closure**）。
+
+```js
+function foo() { 
+    var a = 2;
+    function bar() { // 这就是一个闭包
+    	console.log( a ); // 使用了foo作用域中的a
+    } 
+    return bar; 
+}
+var baz = foo();
+baz(); // 这就是闭包的效果。
+```
+
+### 闭包的作用
+
+1. 在 foo() 执行后，通常会期待 foo() 的整个内部作用域都被销毁，因为我们知道引擎有垃圾回收器用来释放不再使用的内存空间。由于看上去 foo() 的内容不会再被使用，所以很自然地会考虑对其进行回收。
+   	而闭包的“神奇”之处正是可以阻止这件事情的发生。事实上内部作用域依然存在，因此没有被回收。
+2. 闭包使得函数可以继续访问定义时的词法作用域。
+3. 用来创建模块。
+
+### 常见的闭包
+
+​	在定时器、事件监听器、 Ajax 请求、跨窗口通信、Web Workers 或者任何其他的异步（或者同步）任务中，只要使用了`回调函数`，实际上就是在使用闭包！比如：
+
+```js
+function wait(message) {
+    setTimeout( function timer() {
+        console.log( message );
+	}, 1000 );
+}
+wait( "Hello, closure!" );
+
+// 将一个内部函数（名为 timer）传递给 setTimeout(..)。timer具有涵盖 wait(..) 作用域的闭包，因此还保有对变量 message 的引用。
+```
+
+### 闭包的使用
+
+举例：
+
+```js
+for (let i=1; i<=5; i++) { 
+	setTimeout( function timer() { 
+		console.log( i );
+	}, i*1000 );
+}
+
+// for 循环头部的 let 声明还会有一个特殊的行为。这个行为指出变量在循环过程中不止被声明一次，每次迭代都会声明。随后的每个迭代都会使用上一个迭代结束时的值来初始化这个变量。
+
+// 块作用域 + 闭包
+```
+
+## 模块
+
+### 模块模式需要具备两个必要条件
+
+1. 必须有外部的封闭函数，该函数必须至少被调用一次（每次调用都会创建一个新的模块实例）。
+2. 封闭函数必须返回至少一个内部函数，这样内部函数才能在私有作用域中形成闭包，并且可以访问或者修改私有的状态。
+
+### 以前的模块机制
+
+```js
+var MyModules = (function Manager() { 
+    var modules = {};
+	function define(name, deps, impl) {
+        for (var i=0; i<deps.length; i++) { 
+            deps[i] = modules[deps[i]];
+		}
+        modules[name] = impl.apply( impl, deps );
+	}
+	function get(name) { 
+        return modules[name];
+    }
+	return { 
+        define: define,
+        get: get
+	};
+})();
+
+// 下面展示了如何使用它来定义模块： 
+MyModules.define( "bar", [], function() { 
+    function hello(who) { 
+        return "Let me introduce: " + who;
+    }
+	return { 
+        hello: hello
+    };
+});
+MyModules.define( "foo", ["bar"], function(bar) { 
+    var hungry = "hippo";
+	function awesome() { 
+        console.log( bar.hello( hungry ).toUpperCase());
+    }
+    return { 
+        awesome: awesome
+    }; 
+});
+
+var bar = MyModules.get( "bar" );
+var foo = MyModules.get( "foo" );
+
+console.log( bar.hello( "hippo" )); // Let me introduce: hippo
+foo.awesome(); // LET ME INTRODUCE: HIPPO
+```
+
+### es6的模块机制
+
+- import 可以将一个模块中的一个或多个API 导入到当前作用域中，并分别绑定在一个变量上。
+
+- module 会将整个模块的API 导入并绑定到一个变量上。
+
+- export 会将当前模块的一个标识符（变量、函数）导出为公共API。
+
