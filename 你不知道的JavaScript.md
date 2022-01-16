@@ -346,9 +346,9 @@ function foo() {
 
 ## 第5章、作用域闭包
 
-## 闭包
+### 闭包
 
-### 定义
+#### 定义
 
 ​	【本书】：当函数可以记住并访问所在的词法作用域时，就产生了闭包，即使函数是在当前词法作用域之外执行。
 
@@ -366,14 +366,14 @@ var baz = foo();
 baz(); // 这就是闭包的效果。
 ```
 
-### 闭包的作用
+#### 闭包的作用
 
 1. 在 foo() 执行后，通常会期待 foo() 的整个内部作用域都被销毁，因为我们知道引擎有垃圾回收器用来释放不再使用的内存空间。由于看上去 foo() 的内容不会再被使用，所以很自然地会考虑对其进行回收。
    	而闭包的“神奇”之处正是可以阻止这件事情的发生。事实上内部作用域依然存在，因此没有被回收。
 2. 闭包使得函数可以继续访问定义时的词法作用域。
 3. 用来创建模块。
 
-### 常见的闭包
+#### 常见的闭包
 
 ​	在定时器、事件监听器、 Ajax 请求、跨窗口通信、Web Workers 或者任何其他的异步（或者同步）任务中，只要使用了`回调函数`，实际上就是在使用闭包！比如：
 
@@ -388,7 +388,7 @@ wait( "Hello, closure!" );
 // 将一个内部函数（名为 timer）传递给 setTimeout(..)。timer具有涵盖 wait(..) 作用域的闭包，因此还保有对变量 message 的引用。
 ```
 
-### 闭包的使用
+#### 闭包的使用
 
 举例：
 
@@ -404,14 +404,14 @@ for (let i=1; i<=5; i++) {
 // 块作用域 + 闭包
 ```
 
-## 模块
+### 模块
 
-### 模块模式需要具备两个必要条件
+#### 模块模式需要具备两个必要条件
 
 1. 必须有外部的封闭函数，该函数必须至少被调用一次（每次调用都会创建一个新的模块实例）。
 2. 封闭函数必须返回至少一个内部函数，这样内部函数才能在私有作用域中形成闭包，并且可以访问或者修改私有的状态。
 
-### 以前的模块机制
+#### 以前的模块机制
 
 ```js
 var MyModules = (function Manager() { 
@@ -457,11 +457,152 @@ console.log( bar.hello( "hippo" )); // Let me introduce: hippo
 foo.awesome(); // LET ME INTRODUCE: HIPPO
 ```
 
-### es6的模块机制
+#### es6的模块机制
 
 - import 可以将一个模块中的一个或多个API 导入到当前作用域中，并分别绑定在一个变量上。
 
 - module 会将整个模块的API 导入并绑定到一个变量上。
 
 - export 会将当前模块的一个标识符（变量、函数）导出为公共API。
+
+# 第二部分 this和对象原型
+
+## 第1章、关于this
+
+### 首先
+
+​	`this` 关键字是 JavaScript 中最复杂的机制之一。它是一个很特别的关键字，**被自动定义在所有函数的作用域中**。
+
+看一段代码：
+
+```js
+function identify() { 
+	return this.name.toUpperCase();
+}
+function speak() { 
+    var greeting = "Hello, I'm " + identify.call( this ); 
+    console.log( greeting );
+}
+var me = { 
+    name: "Kyle"
+};
+var you = { 
+    name: "Reader"
+};
+
+identify.call( me ); // KYLE 
+identify.call( you ); // READER
+
+speak.call( me ); // Hello, 我是 KYLE
+speak.call( you ); // Hello, 我是 READER
+
+// call可以用于修改this的指向
+
+// 上面代码其实就等同于你在函数中声明一个形参用来接收传递过来的数据
+function identify(context) { 
+    return context.name.toUpperCase();
+}
+function speak(context) { 
+    var greeting = "Hello, I'm " + identify( context ); 
+    console.log( greeting );
+}
+
+identify( you ); // READER
+speak( me ); //hello, 我是 KYLE
+```
+
+### 那么为什么要使用this呢？
+
+​	随着你的使用模式越来越复杂，**显式**传递上下文对象会让代码变得越来越混乱，使用 this 则不会这样，this 提供了一种更优雅的方式来**隐式**“传递”一个对象引用，因此可以将API 设计得更加简洁并且易于复用。
+
+​	具体当我们介绍对象和原型时，你就会明白函数可以自动引用合适的上下文对象有多重要。
+
+### this的误解
+
+#### 1.指向自身
+
+​	人们很容易把 this 理解成指向函数自身。然而并不是。
+
+​	我尝试通过下面一个例子来论证。
+
+```js
+function foo(num) {
+	console.log( "foo: " + num );
+    // 记录 foo 被调用的次数 
+    this.count++;
+} 
+foo.count = 0;
+window.count = 0;
+var i;
+for (i=0; i<10; i++) { 
+    if (i > 5) {
+        foo( i );
+    }
+} 
+// foo 被调用了多少次？
+console.log( foo.count ); // 如果this指向的函数本身的话，那么这里应该会输出4，然而这里会输出0。
+console.log( window.count ); // 再来看这个输出，输出是4。很显然函数foo里的this指向的是window，而不是foo本身。原因在后面将会说到。
+```
+
+​	如果你想让函数里的this指向函数本身的话，可以使用 call，apply，bind 函数来改变this的指向。
+
+​	这里以call举例：
+
+```
+function foo(num) {
+	console.log( "foo: " + num );
+    this.count++;
+} 
+foo.count = 0;
+var i;
+for (i=0; i<10; i++) { 
+    if (i > 5) {
+        foo.call(foo, i); // 改变foo中this的指向，指向foo
+    }
+} 
+console.log( foo.count ); // 输出4
+```
+
+#### 2.指向它的作用域
+
+​	第二种常见的误解是，this 指向函数的作用域。*这个问题有点复杂，因为在某种情况下它是正确的，但是在其他情况下它却是错误的。*（这句话爷也不懂，书里也没提到正确的情况）
+
+​	this 在任何情况下都不指向函数的词法作用域。作用域“对象”无法通过 JavaScript 代码访问，它存在于 JavaScript 引擎内部。
+
+思考这样一段代码：
+
+这里试图使用 this 来隐式引用函数的词法作用域。
+
+```js
+function foo() { 
+    var a = 2; 
+    this.bar(); // 这里的this并不是指向函数的作用域，所以下面的this不会拿到foo中的a。
+}
+function bar() {
+    console.log( this.a ); // 试图访问foo函数作用域中的a，报错。
+}
+foo(); // ReferenceError: a is not defined
+```
+
+### this到底是什么
+
+​	`this` 的绑定和函数声明的位置没有任何关系，**只取决于函数的调用方式**。
+
+​	当一个函数被调用时，会创建一个活动记录（有时候也称为执行上下文）。这个记录会包含函数在哪里被调用（调用栈）、函数的调用方法、传入的参数等信息。this 就是记录的其中一个属性，会在函数执行的过程中用到。
+
+**总之，this非常重要！**
+
+## 第2章、this全面解析
+
+
+
+
+
+
+
+# 附录
+
+## 唯一一种可以从匿名函数对象内部引用自身的方法
+
+​	arguments. callee（已被弃用）尽量使用具名函数，这样可以直接拿到函数名（函数本身）。
 
