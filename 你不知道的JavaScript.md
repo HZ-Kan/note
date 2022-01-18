@@ -858,15 +858,96 @@ console.log( bar.a ); // 2
 
 ​	对于上面的绑定规则是设有优先级的。
 
-​	这里不利用代码进行测试。直接公布答案：
+​	举几个例子：
+
+**默认最低不做比较。**
+
+**显示与隐式的比较**
+
+```js
+// 显示 > 隐式
+function foo() {
+    console.log( this.a );
+}
+var obj1 = {
+    a: 2,
+    foo: foo
+};
+var obj2 = { 
+    a: 3,
+    foo: foo
+};
+obj1.foo(); // 2
+obj2.foo(); // 3
+
+obj1.foo.call( obj2 ); // 3
+obj2.foo.call( obj1 ); // 2
+```
+
+**new与隐式比较**
+
+```js
+// new > 隐式
+function foo(something) {
+    this.a = something;
+}
+var obj1 = {
+    foo: foo
+}; 
+obj1.foo( 2 ); 
+console.log( obj1.a ); // 2
+
+var bar = new obj1.foo( 4 );
+console.log( obj1.a ); // 2
+console.log( bar.a ); // 4
+```
+
+**new与显示比较**
+
+**注：new 和 call/apply 无法一起使用**，因此无法通过 new foo.call(obj1) 来直接进行测试。但是我们可以使用硬绑定来测试它俩的优先级。
+
+```js
+// new > 显示
+function foo(something) { 
+    this.a = something;
+} 
+ar obj1 = {};
+
+var bar = foo.bind( obj1 );
+bar( 2 );
+console.log( obj1.a ); // 2
+
+var baz = new bar(3); 
+console.log( obj1.a ); // 2
+console.log( baz.a ); // 3
+```
+
+​	为什么要在 new 中使用硬绑定函数呢？直接使用普通函数不是更简单吗？ 
+
+​	之所以要在 new 中使用硬绑定函数，主要目的是预先设置函数的一些参数，这样在使用 new 进行初始化时就可以只传入其余的参数。bind(..) 的功能之一就是可以把除了第一个 参数（第一个参数用于绑定 this）之外的其他参数都传给下层的函数（这种技术称为“部分应用”，是“**柯里化**”的一种）。
+
+​	举例来说：
+
+```js
+function foo(p1,p2) {
+	this.val = p1 + p2;
+}
+// 之所以使用 null 是因为在本例中我们并不关心硬绑定的 this 是什么 
+// 反正使用 new 时 this 会被修改 
+var bar = foo.bind( null, "p1" );
+var baz = new bar( "p2" );
+baz.val; // p1p2
+```
+
+**总结**
 
 ```
-显示绑定 > 隐式绑定 > 默认绑定
+new绑定 > 显示绑定 > 隐式绑定 > 默认绑定
 ```
-
-**注：new 和 call/apply 无法一起使用**
 
 ### 绑定总结
+
+现在我们可以根据优先级来判断函数在某个调用位置应用的是哪条规则。可以按照**下面的顺序**来进行判断：
 
 ```js
 // 1. 函数是否在 new 中调用（new 绑定）？如果是的话 this 绑定的是新创建的对象。 var bar = new foo()
