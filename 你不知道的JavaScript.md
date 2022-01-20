@@ -636,7 +636,7 @@ foo(); // 2
 // 这里的foo()其实是window.foo()（浏览器中），函数调用时应用了 this 的默认绑定，绑定的就是全局对象。
 ```
 
-​	**注：如果使用严格模式（strict mode），那么全局对象将无法使用默认绑定，因此 this 会绑定到 undefined：**
+​	**注：如果使用严格模式（strict mode），那么全局对象将无法使用默认绑定，因此 this 会绑定到 undefined：**对于默认绑定来说，决定 this 绑定对象的并不是调用位置是否处于严格模式，而是函数体是否处于严格模式。如果函数体处于严格模式，this 会被绑定到 undefined，否则this 会被绑定到全局对象。
 
 ```js
 function foo() {
@@ -970,9 +970,191 @@ var a = 2;
 foo.call( null ); // 2
 ```
 
+​	那么什么情况下你会传入 null 呢？ 一种非常常见的做法是使用 apply(..) 来“展开”一个数组，并当作参数传入一个函数。 类似地，bind(..) 可以对参数进行`柯里化`（预先设置一些参数），这种方法有时非常有用：
+
+```js
+function foo(a,b) {
+    console.log( "a:" + a + ", b:" + b );
+}
+
+// 把数组“展开”成参数
+foo.apply( null, [2, 3] ); // a:2, b:3
+
+// 使用 bind(..) 进行柯里化
+var bar = foo.bind( null, 2 );
+bar( 3 ); // a:2, b:3
+```
+
+​	这两种方法都需要传入一个参数当作 this 的绑定对象。如果函数并不关心 this 的话，你仍然需要传入一个`占位值`，这时 null 可能是一个不错的选择，就像代码所示的那样。但在 ES6 中，可以用 ... 操作符代替 apply(..) 来“展 开”数组，foo(...[1,2]) 和 foo(1,2) 是一样的，这样可以避免不必要的 this 绑定。可惜，在 ES6 中没有柯里化的相关语法，因此还是需要使用bind(..)。
+
+**更安全的this**
+
+​	一种“更安全”的做法是传入一个特殊的对象，把 this 绑定到这个对象不会对你的程序产生任何副作用（包括它不会像null一样进行`默认绑定`）。就像网络（以及军队）一样，我们可以创建一个“DMZ”（demilitarized zone，非军事区）对象。比如：
+
+```js
+function foo(a,b) {
+    console.log( "a:" + a + ", b:" + b );
+}
+// 我们的 DMZ 空对象 
+// Object.create(null) 和 {} 很像，但是并不会创建 Object.prototype 这个委托（后面会讲），所以它比 {}“更空”
+var ø = Object.create( null );
+
+// 把数组展开成参数 
+foo.apply( ø, [2, 3] ); // a:2, b:3
+
+// 使用 bind(..) 进行柯里化 
+var bar = foo.bind( ø, 2 );
+bar( 3 ); // a:2, b:3
+```
+
 #### 2.间接引用	
 
+​	另一个需要注意的是，你有可能（有意或者无意地）创建一个函数的“间接引用”，在这 种情况下，调用这个函数会应用默认绑定规则。
+间接引用最容易在**赋值时**发生：
+
+```js
+function foo() {
+    console.log( this.a );
+}
+var a = 2; 
+var o = {
+    a: 3,
+    foo: foo 
+}; 
+var p = { a: 4 };
+o.foo(); // 3
+console.log(p.foo = o.foo);
+(p.foo = o.foo)(); // 2
+```
+
+​	赋值表达式 p.foo = o.foo 的返回值是目标函数的引用，因此调用位置是 foo() 而不是 p.foo() 或者 o.foo()。根据我们之前说过的，这里会应用默认绑定。
+
 #### 3.软绑定
+
+​	之前我们已经看到过，硬绑定这种方式可以把 this 强制绑定到指定的对象（除了使用 new 时），防止函数调用应用默认绑定规则。问题在于，硬绑定会大大降低函数的灵活性，使用硬绑定之后就无法使用隐式绑定或者显式绑定来修改 this。
+
+​	 如果可以给默认绑定指定一个全局对象和 undefined 以外的值，那就可以实现和硬绑定相 同的效果，同时保留隐式绑定或者显式绑定修改 this 的能力。 可以通过一种被称为`软绑定`的方法来实现我们想要的效果：
+
+```js
+if (!Function.prototype.softBind) { 
+    Function.prototype.softBind = function(obj) { 
+        var fn = this; // 捕获所有 curried 参数
+        var curried = [].slice.call( arguments, 1 ); 
+        var bound = function() { 
+            return fn.apply( (!this || this === (window || global)) ? obj : this
+curried.concat.apply( curried, arguments ) );
+    };
+        bound.prototype = Object.create( fn.prototype ); 
+        return bound;
+}; }
+```
+
+​	除了软绑定之外，softBind(..) 的其他原理和 ES5 内置的 bind(..) 类似。它会对指定的函数进行封装，首先检查调用时的 this，如果 this 绑定到全局对象或者 undefined，那就把 指定的默认对象 obj 绑定到 this，否则不会修改 this。此外，这段代码还支持可选的柯里化（详情请查看之前和 bind(..) 相关的介绍）。
+
+下面我们看看 softBind 是否实现了软绑定功能：
+
+```js
+function foo() { 
+	console.log("name: " + this.name);
+}
+var obj = { name: "obj" },
+    obj2 = { name: "obj2" },
+    obj3 = { name: "obj3" };
+var fooOBJ = foo.softBind( obj );
+fooOBJ(); // name: obj
+obj2.foo = foo.softBind(obj);
+obj2.foo(); // name: obj2 <---- 看！！！
+fooOBJ.call( obj3 ); // name: obj3 <---- 看！
+setTimeout( obj2.foo, 10 ); // name: obj <---- 应用了软绑定
+```
+
+可以看到，软绑定版本的 foo() 可以手动将 this 绑定到 obj2 或者 obj3 上，但如果应用默 认绑定，则会将 this 绑定到 obj。
+
+**注：js标准中暂未添加软绑定（2022-01-20）**
+
+### this词法
+
+​	ES6 新增了一种无法使用上述绑定规则的特殊函数类型：箭头函数。它的绑定规则是根据外层（函数或者全局）作用域来决定的。也就是箭头函数的上下文。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -991,3 +1173,64 @@ foo.call( null ); // 2
 ​	Object.create(null) 和 {} 很像，但是并不会创建 Object. prototype 这个委托，所以它比 {}“更空”：
 
 ## 柯里化
+
+
+
+## js中的4种函数调用模式：
+
+### 1 函数调用
+
+包括函数名()和匿名函数调用,this指向window
+
+```javascript
+ function getSum() {
+    console.log(this) //window
+ }
+ getSum()
+ 
+ (function() {
+    console.log(this) //window
+ })()
+ 
+ var getSum=function() {
+    console.log(this) //window
+ }
+ getSum()
+```
+
+### 2 方法调用
+
+对象.方法名(),this指向对象
+
+```javascript
+var objList = {
+   name: 'methods',
+   getSum: function() {
+     console.log(this) //objList对象
+   }
+}
+objList.getSum()
+```
+
+### 3 构造器调用
+
+new 构造函数名(),this指向构造函数
+
+```javascript
+function Person() {
+  console.log(this); //指向构造函数Person
+}
+var personOne = new Person();
+```
+
+### 4 间接调用
+
+利用call和apply来实现,this就是call和apply对应的第一个参数,如果不传值或者第一个值为null,undefined时this指向window
+
+```javascript
+function foo() {
+   console.log(this);
+}
+foo.apply('我是apply改变的this值');//我是apply改变的this值
+foo.call('我是call改变的this值');//我是call改变的this值
+```
